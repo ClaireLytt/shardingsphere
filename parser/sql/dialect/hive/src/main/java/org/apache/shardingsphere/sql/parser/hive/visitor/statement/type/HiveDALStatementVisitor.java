@@ -20,6 +20,7 @@ package org.apache.shardingsphere.sql.parser.hive.visitor.statement.type;
 import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.sql.parser.api.ASTNode;
 import org.apache.shardingsphere.sql.parser.api.visitor.statement.type.DALStatementVisitor;
+import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowViewsContext;
 import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowConnectorsContext;
 import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowDatabasesContext;
 import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowLikeContext;
@@ -34,6 +35,7 @@ import org.apache.shardingsphere.sql.parser.statement.hive.dal.HiveUseStatement;
 import org.apache.shardingsphere.sql.parser.statement.hive.dal.show.HiveShowConnectorsStatement;
 import org.apache.shardingsphere.sql.parser.statement.hive.dal.show.HiveShowDatabasesStatement;
 import org.apache.shardingsphere.sql.parser.statement.hive.dal.show.HiveShowTablesStatement;
+import org.apache.shardingsphere.sql.parser.statement.hive.dal.show.HiveShowViewsStatement;
 
 public final class HiveDALStatementVisitor extends HiveStatementVisitor implements DALStatementVisitor {
     
@@ -73,5 +75,10 @@ public final class HiveDALStatementVisitor extends HiveStatementVisitor implemen
     @Override
     public ASTNode visitShowTables(final ShowTablesContext ctx) {
         return new HiveShowTablesStatement(getDatabaseType());
+    }
+
+    @Override
+    public ASTNode visitShowViews(final ShowViewsContext ctx) {
+        return new HiveShowViewsStatement(getDatabaseType());
     }
 }

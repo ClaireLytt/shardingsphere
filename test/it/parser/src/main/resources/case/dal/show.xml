@@ -898,4 +898,11 @@
     <show sql-case-id="show_tables_in_database" />
     <show sql-case-id="show_tables_with_wildcard" />
     <show sql-case-id="show_tables_in_db_with_wildcard" />
+
+    <show sql-case-id="show_views_basic" />
+    <show sql-case-id="show_views_with_like_wildcard" />
+    <show sql-case-id="show_views_from_database" />
+    <show sql-case-id="show_views_in_database" />
+    <show sql-case-id="show_views_in_db_with_like" />
+    <show sql-case-id="show_views_from_db_with_like" />
 </sql-parser-test-cases>

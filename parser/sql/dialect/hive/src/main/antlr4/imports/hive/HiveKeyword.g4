@@ -2943,6 +2943,10 @@ VIEW
     : V I E W
     ;
 
+VIEWS
+    : V I E W S
+    ;
+
 VIRTUAL
     : V I R T U A L
     ;

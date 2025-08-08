@@ -23,6 +23,7 @@ show
     : showDatabases
     | showConnectors
     | showTables
+    | showViews
     ;
 
 showDatabases
@@ -39,4 +40,12 @@ showConnectors
 
 showTables
     : SHOW TABLES (IN databaseName)? stringLiterals?
+    ;
+
+showViews
+    : SHOW VIEWS showFrom? showLike?
+    ;
+
+showFrom
+    : (IN | FROM) databaseName
     ;

@@ -156,4 +156,10 @@
     <sql-case id="show_tables_in_database" value="SHOW TABLES IN sales_db;" db-types="Hive" />
     <sql-case id="show_tables_with_wildcard" value="SHOW TABLES 'order_*';" db-types="Hive" />
     <sql-case id="show_tables_in_db_with_wildcard" value="SHOW TABLES IN sales_db 'order_*';" db-types="Hive" />
+    <sql-case id="show_views_basic" value="SHOW VIEWS;" db-types="Hive" />
+    <sql-case id="show_views_with_like_wildcard" value="SHOW VIEWS LIKE 'user_*';" db-types="Hive" />
+    <sql-case id="show_views_from_database" value="SHOW VIEWS FROM analytics_db;" db-types="Hive" />
+    <sql-case id="show_views_in_database" value="SHOW VIEWS IN reports_db;" db-types="Hive" />
+    <sql-case id="show_views_in_db_with_like" value="SHOW VIEWS IN sales_db LIKE 'quarterly_*|annual_*';" db-types="Hive" />
+    <sql-case id="show_views_from_db_with_like" value="SHOW VIEWS FROM inventory_db LIKE 'low_stock_|out_of_stock';" db-types="Hive" />
 </sql-cases>
