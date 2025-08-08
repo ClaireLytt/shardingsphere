@@ -21,6 +21,8 @@ import org.apache.shardingsphere.infra.database.core.type.DatabaseType;
 import org.apache.shardingsphere.sql.parser.api.ASTNode;
 import org.apache.shardingsphere.sql.parser.api.visitor.statement.type.DALStatementVisitor;
 import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowViewsContext;
+import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowMaterializedViewsContext;
+import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowPartitionsContext;
 import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowConnectorsContext;
 import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowDatabasesContext;
 import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowLikeContext;
@@ -32,10 +34,7 @@ import org.apache.shardingsphere.sql.parser.statement.core.segment.dal.ShowLikeS
 import org.apache.shardingsphere.sql.parser.statement.core.value.identifier.IdentifierValue;
 import org.apache.shardingsphere.sql.parser.statement.core.value.literal.impl.StringLiteralValue;
 import org.apache.shardingsphere.sql.parser.statement.hive.dal.HiveUseStatement;
-import org.apache.shardingsphere.sql.parser.statement.hive.dal.show.HiveShowConnectorsStatement;
-import org.apache.shardingsphere.sql.parser.statement.hive.dal.show.HiveShowDatabasesStatement;
-import org.apache.shardingsphere.sql.parser.statement.hive.dal.show.HiveShowTablesStatement;
-import org.apache.shardingsphere.sql.parser.statement.hive.dal.show.HiveShowViewsStatement;
+import org.apache.shardingsphere.sql.parser.statement.hive.dal.show.*;
 
 public final class HiveDALStatementVisitor extends HiveStatementVisitor implements DALStatementVisitor {
     
@@ -80,5 +79,15 @@ public final class HiveDALStatementVisitor extends HiveStatementVisitor implemen
     @Override
     public ASTNode visitShowViews(final ShowViewsContext ctx) {
         return new HiveShowViewsStatement(getDatabaseType());
+    }
+
+    @Override
+    public ASTNode visitShowMaterializedViews(final ShowMaterializedViewsContext ctx) {
+        return new HiveShowMaterializedViewsStatement(getDatabaseType());
+    }
+
+    @Override
+    public ASTNode visitShowPartitions(final ShowPartitionsContext ctx) {
+        return new HiveShowPartitionsStatement(getDatabaseType());
     }
 }
