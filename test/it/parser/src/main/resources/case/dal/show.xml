@@ -916,4 +916,10 @@
     <show sql-case-id="show_partitions_with_order_by" />
     <show sql-case-id="show_partitions_with_limit" />
     <show sql-case-id="show_partitions_all_options" />
+    <show sql-case-id="show_table_extended_basic" />
+    <show sql-case-id="show_table_extended_in_database" />
+    <show sql-case-id="show_table_extended_from_database" />
+    <show sql-case-id="show_table_extended_with_partition" />
+    <show sql-case-id="show_table_extended_all_options_in" />
+    <show sql-case-id="show_table_extended_all_options_from" />
 </sql-parser-test-cases>

@@ -28,6 +28,7 @@ import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowData
 import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowLikeContext;
 import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.UseContext;
 import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowTablesContext;
+import org.apache.shardingsphere.sql.parser.autogen.HiveStatementParser.ShowTablesExtendedContext;
 import org.apache.shardingsphere.sql.parser.hive.visitor.statement.HiveStatementVisitor;
 import org.apache.shardingsphere.sql.parser.statement.core.segment.dal.ShowFilterSegment;
 import org.apache.shardingsphere.sql.parser.statement.core.segment.dal.ShowLikeSegment;
@@ -89,5 +90,10 @@ public final class HiveDALStatementVisitor extends HiveStatementVisitor implemen
     @Override
     public ASTNode visitShowPartitions(final ShowPartitionsContext ctx) {
         return new HiveShowPartitionsStatement(getDatabaseType());
+    }
+
+    @Override
+    public ASTNode visitShowTablesExtended(final ShowTablesExtendedContext ctx) {
+        return new HiveShowTablesExtendedStatement(getDatabaseType());
     }
 }

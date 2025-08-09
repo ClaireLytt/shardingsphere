@@ -26,6 +26,7 @@ show
     | showViews
     | showMaterializedViews
     | showPartitions
+    | showTablesExtended
     ;
 
 showDatabases
@@ -50,6 +51,10 @@ showMaterializedViews
 
 showPartitions
     : SHOW PARTITIONS tableName partitionSpec? whereClause? orderByClause? limitClause?
+    ;
+
+showTablesExtended
+    : SHOW TABLE EXTENDED showFrom? showLike partitionSpec?
     ;
 
 showFrom
