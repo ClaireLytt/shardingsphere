@@ -41,6 +41,7 @@ import javax.xml.bind.JAXBException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -94,17 +95,11 @@ public final class DataSetEnvironmentManager {
             }
             String insertSQL;
             try (Connection connection = dataSourceMap.get(dataNode.getDataSourceName()).getConnection()) {
-                DatabaseType currentDatabaseType;
-                try {
-                    currentDatabaseType = DatabaseTypeFactory.get(connection.getMetaData().getURL());
-                } catch (final SQLException ex) {
-                    currentDatabaseType = databaseType;
-                }
                 String insertTableName = dataNode.getTableName();
-                if ("Hive".equalsIgnoreCase(currentDatabaseType.getType())) {
+                if ("Hive".equalsIgnoreCase(databaseType.getType())) {
                     insertTableName = dataNode.getDataSourceName() + "." + dataNode.getTableName();
                 }
-                insertSQL = generateInsertSQL(insertTableName, dataSetMetaData.getColumns(), currentDatabaseType);
+                insertSQL = generateInsertSQL(insertTableName, dataSetMetaData.getColumns(), databaseType);
             }
             fillDataTasks.add(new InsertTask(dataSourceMap.get(dataNode.getDataSourceName()), insertSQL, sqlValueGroups, databaseType));
         }
@@ -229,36 +224,14 @@ public final class DataSetEnvironmentManager {
             for (SQLValue each : sqlValueGroup.getValues()) {
                 Object value = each.getValue();
                 int index = each.getIndex();
-                if (value == null) {
-                    preparedStatement.setNull(index, java.sql.Types.NULL);
-                } else if (value instanceof String) {
-                    preparedStatement.setString(index, (String) value);
-                } else if (value instanceof Integer) {
-                    preparedStatement.setInt(index, (Integer) value);
-                } else if (value instanceof Long) {
-                    preparedStatement.setLong(index, (Long) value);
-                } else if (value instanceof Short) {
-                    preparedStatement.setShort(index, (Short) value);
-                } else if (value instanceof Byte) {
-                    preparedStatement.setByte(index, (Byte) value);
-                } else if (value instanceof Float) {
-                    preparedStatement.setFloat(index, (Float) value);
-                } else if (value instanceof Double) {
-                    preparedStatement.setDouble(index, (Double) value);
-                } else if (value instanceof Boolean) {
-                    preparedStatement.setBoolean(index, (Boolean) value);
-                } else if (value instanceof java.math.BigDecimal) {
-                    preparedStatement.setBigDecimal(index, (java.math.BigDecimal) value);
-                } else if (value instanceof java.sql.Date) {
-                    preparedStatement.setDate(index, (java.sql.Date) value);
-                } else if (value instanceof java.sql.Time) {
-                    preparedStatement.setTime(index, (java.sql.Time) value);
-                } else if (value instanceof java.sql.Timestamp) {
-                    preparedStatement.setTimestamp(index, (java.sql.Timestamp) value);
-                } else if (value instanceof byte[]) {
-                    preparedStatement.setBytes(index, (byte[]) value);
+                if ("Hive".equalsIgnoreCase(databaseType.getType())) {
+                    if (value instanceof Date) {
+                        preparedStatement.setString(index, value.toString());
+                    } else {
+                        preparedStatement.setObject(index, value);
+                    }
                 } else {
-                    preparedStatement.setString(index, value.toString());
+                    preparedStatement.setObject(index, value);
                 }
             }
         }

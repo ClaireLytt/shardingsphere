@@ -31,6 +31,7 @@ import java.sql.DriverManager;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -97,9 +98,7 @@ public final class HiveContainer extends DockerStorageContainer {
     @Override
     protected void postStart() {
         try {
-            execInContainer("bash", "-c",
-                    "beeline -u \"jdbc:hive2://localhost:10000/default\" -e \"CREATE DATABASE IF NOT EXISTS encrypt; "
-                            + "CREATE DATABASE IF NOT EXISTS expected_dataset; CREATE DATABASE IF NOT EXISTS mask;\"");
+            createDatabasesFromConfiguration();
             log.info("Databases created successfully in postStart()");
             execInContainer("bash", "-c",
                     "if [ -f /docker-entrypoint-initdb.d/01-actual-init.sql ]; then beeline -u \"jdbc:hive2://localhost:10000/default\" -f /docker-entrypoint-initdb.d/01-actual-init.sql; fi");
@@ -111,5 +110,25 @@ public final class HiveContainer extends DockerStorageContainer {
         }
         super.postStart();
         log.info("Hive container postStart completed successfully");
+    }
+    
+    private void createDatabasesFromConfiguration() throws InterruptedException, IOException {
+        Collection<String> actualDatabaseNames = getDatabaseNames();
+        Collection<String> expectedDatabaseNames = getExpectedDatabaseNames();
+        Collection<String> allDatabaseNames = new HashSet<>();
+        allDatabaseNames.addAll(actualDatabaseNames);
+        allDatabaseNames.addAll(expectedDatabaseNames);
+        
+        if (allDatabaseNames.isEmpty()) {
+            log.warn("No databases configured for Hive container");
+            return;
+        }
+        StringBuilder createDatabaseSQL = new StringBuilder();
+        for (String databaseName : allDatabaseNames) {
+            createDatabaseSQL.append("CREATE DATABASE IF NOT EXISTS ").append(databaseName).append("; ");
+        }
+        String command = String.format("beeline -u \"jdbc:hive2://localhost:10000/default\" -e \"%s\"", createDatabaseSQL.toString());
+        execInContainer("bash", "-c", command);
+        log.info("Created databases: {}", allDatabaseNames);
     }
 }
