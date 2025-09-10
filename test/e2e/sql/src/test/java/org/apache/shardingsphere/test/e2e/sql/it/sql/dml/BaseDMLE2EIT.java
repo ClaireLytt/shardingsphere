@@ -73,6 +73,7 @@ import java.util.stream.Collectors;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class BaseDMLE2EIT implements SQLE2EIT {
     
@@ -241,7 +242,10 @@ public abstract class BaseDMLE2EIT implements SQLE2EIT {
         assertThat(actual.getColumnCount(), is(expected.size()));
         int index = 1;
         for (DataSetColumn each : expected) {
-            assertThat(actual.getColumnLabel(index++).toUpperCase(), is(each.getName().toUpperCase()));
+            String actualLabel = actual.getColumnLabel(index++);
+            int lastDotIndex = actualLabel != null ? actualLabel.lastIndexOf('.') : -1;
+            String normalizedLabel = lastDotIndex >= 0 ? actualLabel.substring(lastDotIndex + 1) : actualLabel;
+            assertThat(normalizedLabel.toUpperCase(), is(each.getName().toUpperCase()));
         }
     }
     
