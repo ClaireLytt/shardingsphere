@@ -17,6 +17,8 @@
 
 package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.option;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,20 +41,19 @@ public interface StorageContainerConfigurationOption {
     Map<String, String> getContainerEnvironments();
     
     /**
-     * Get mounted resources.
+     * Get mounted configuration resources.
      *
-     * @param scenario scenario
-     * @return mounted resources
+     * @return mounted configuration resources
      */
-    Map<String, String> getMountedResources(String scenario);
+    Collection<String> getMountedConfigurationResources();
     
     /**
-     * Get mounted resources.
+     * Get additional mounted env SQL resources.
      *
      * @param majorVersion major version
-     * @return mounted resources
+     * @return additional mounted env SQL resources
      */
-    Map<String, String> getMountedResources(int majorVersion);
+    Collection<String> getAdditionalMountedSQLEnvResources(int majorVersion);
     
     /**
      * Whether embedded storage container.
@@ -60,4 +61,11 @@ public interface StorageContainerConfigurationOption {
      * @return is embedded storage container or not
      */
     boolean isEmbeddedStorageContainer();
+    
+    /**
+     * Get supported major versions.
+     *
+     * @return supported major versions
+     */
+    List<Integer> getSupportedMajorVersions();
 }

@@ -17,15 +17,13 @@
 
 package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.option.dialect;
 
-import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
-import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.constants.StorageContainerConstants;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.option.StorageContainerConfigurationOption;
-import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.impl.PostgreSQLContainer;
-import org.apache.shardingsphere.test.e2e.env.runtime.scenario.path.ScenarioDataPath;
-import org.apache.shardingsphere.test.e2e.env.runtime.scenario.path.ScenarioDataPath.Type;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,11 +31,9 @@ import java.util.Map;
  */
 public final class PostgreSQLStorageContainerConfigurationOption implements StorageContainerConfigurationOption {
     
-    private final DatabaseType databaseType = TypedSPILoader.getService(DatabaseType.class, "PostgreSQL");
-    
     @Override
     public String getCommand() {
-        return "-c config_file=" + PostgreSQLContainer.POSTGRESQL_CONF_IN_CONTAINER + " --max_connections=600 --max_prepared_transactions=600 --wal_level=logical";
+        return "-c config_file=/etc/postgresql/postgresql.conf";
     }
     
     @Override
@@ -49,24 +45,22 @@ public final class PostgreSQLStorageContainerConfigurationOption implements Stor
     }
     
     @Override
-    public Map<String, String> getMountedResources(final String scenario) {
-        Map<String, String> result = new HashMap<>(3, 1F);
-        result.put(new ScenarioDataPath(scenario).getInitSQLResourcePath(Type.ACTUAL, databaseType) + "/01-actual-init.sql", "/docker-entrypoint-initdb.d/01-actual-init.sql");
-        result.put(new ScenarioDataPath(scenario).getInitSQLResourcePath(Type.EXPECTED, databaseType) + "/01-expected-init.sql", "/docker-entrypoint-initdb.d/01-expected-init.sql");
-        result.put("/container/postgresql/cnf/postgresql.conf", PostgreSQLContainer.POSTGRESQL_CONF_IN_CONTAINER);
-        return result;
+    public Collection<String> getMountedConfigurationResources() {
+        return Collections.singleton("/etc/postgresql/postgresql.conf");
     }
     
     @Override
-    public Map<String, String> getMountedResources(final int majorVersion) {
-        Map<String, String> result = new HashMap<>(2, 1F);
-        result.put("/env/postgresql/01-initdb.sql", "/docker-entrypoint-initdb.d/01-initdb.sql");
-        result.put("/container/postgresql/cnf/postgresql.conf", PostgreSQLContainer.POSTGRESQL_CONF_IN_CONTAINER);
-        return result;
+    public Collection<String> getAdditionalMountedSQLEnvResources(final int majorVersion) {
+        return Collections.emptyList();
     }
     
     @Override
     public boolean isEmbeddedStorageContainer() {
         return false;
+    }
+    
+    @Override
+    public List<Integer> getSupportedMajorVersions() {
+        return Collections.emptyList();
     }
 }

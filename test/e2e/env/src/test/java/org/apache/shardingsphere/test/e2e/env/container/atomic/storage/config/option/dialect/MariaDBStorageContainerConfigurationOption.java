@@ -18,11 +18,12 @@
 package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.option.dialect;
 
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.option.StorageContainerConfigurationOption;
-import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.impl.MySQLContainer;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.util.ContainerUtils;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,20 +45,22 @@ public final class MariaDBStorageContainerConfigurationOption implements Storage
     }
     
     @Override
-    public Map<String, String> getMountedResources(final String scenario) {
-        return Collections.emptyMap();
+    public Collection<String> getMountedConfigurationResources() {
+        return Collections.singleton("/etc/mysql/mariadb.cnf");
     }
     
     @Override
-    public Map<String, String> getMountedResources(final int majorVersion) {
-        Map<String, String> result = new HashMap<>(2, 1F);
-        result.put("/container/mysql/cnf/8/my.cnf", MySQLContainer.MYSQL_CONF_IN_CONTAINER);
-        result.put("/env/mysql/01-initdb.sql", "/docker-entrypoint-initdb.d/01-initdb.sql");
-        return result;
+    public Collection<String> getAdditionalMountedSQLEnvResources(final int majorVersion) {
+        return Collections.emptyList();
     }
     
     @Override
     public boolean isEmbeddedStorageContainer() {
         return false;
+    }
+    
+    @Override
+    public List<Integer> getSupportedMajorVersions() {
+        return Collections.emptyList();
     }
 }

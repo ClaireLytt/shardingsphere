@@ -14,3 +14,5 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+
+CREATE USER IF NOT EXISTS 'ready_user'@'%' IDENTIFIED BY 'Ready@123';

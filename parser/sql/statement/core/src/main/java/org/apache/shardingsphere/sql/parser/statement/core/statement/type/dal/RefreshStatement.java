@@ -15,24 +15,16 @@
  * limitations under the License.
  */
 
-package org.apache.shardingsphere.proxy.backend.state;
+package org.apache.shardingsphere.sql.parser.statement.core.statement.type.dal;
 
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
-import org.apache.shardingsphere.infra.spi.annotation.SingletonSPI;
-import org.apache.shardingsphere.infra.spi.type.typed.TypedSPI;
-import org.apache.shardingsphere.sql.parser.statement.core.statement.SQLStatement;
 
 /**
- * Proxy cluster state.
+ * Refresh statement.
  */
-@SingletonSPI
-public interface ProxyClusterState extends TypedSPI {
+public final class RefreshStatement extends DALStatement {
     
-    /**
-     * Check SQL statement.
-     *
-     * @param sqlStatement SQL statement
-     * @param databaseType database type
-     */
-    void check(SQLStatement sqlStatement, DatabaseType databaseType);
+    public RefreshStatement(final DatabaseType databaseType) {
+        super(databaseType);
+    }
 }

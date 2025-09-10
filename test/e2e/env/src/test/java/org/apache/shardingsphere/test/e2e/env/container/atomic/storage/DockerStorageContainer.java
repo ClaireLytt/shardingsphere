@@ -43,9 +43,9 @@ import java.util.stream.Collectors;
 @Getter
 public abstract class DockerStorageContainer extends DockerITContainer implements StorageContainer {
     
-    private static final String READY_USER = "ready_user";
+    private static final String CHECK_READY_USER = "ready_user";
     
-    private static final String READY_USER_PASSWORD = "Ready@123";
+    private static final String CHECK_READY_PASSWORD = "Ready@123";
     
     private final DatabaseType databaseType;
     
@@ -60,20 +60,20 @@ public abstract class DockerStorageContainer extends DockerITContainer implement
     
     @Override
     protected void configure() {
-        withClasspathResourceMapping("/container/" + databaseType.getType().toLowerCase() + "/init-sql/00-init-authority.sql", "/docker-entrypoint-initdb.d/00-init-authority.sql", BindMode.READ_ONLY);
-        withClasspathResourceMapping("/container/" + databaseType.getType().toLowerCase() + "/init-sql/99-be-ready.sql", "/docker-entrypoint-initdb.d/99-be-ready.sql", BindMode.READ_ONLY);
         withExposedPorts(getExposedPort());
-        setWaitStrategy(new JdbcConnectionWaitStrategy(
-                () -> DriverManager.getConnection(getDefaultDatabaseName().isPresent()
-                        ? DataSourceEnvironment.getURL(databaseType, "localhost", getFirstMappedPort(), getDefaultDatabaseName().get())
-                        : DataSourceEnvironment.getURL(databaseType, "localhost", getFirstMappedPort()), READY_USER, READY_USER_PASSWORD)));
+        setWaitStrategy(new JdbcConnectionWaitStrategy(() -> DriverManager.getConnection(getURL(), CHECK_READY_USER, CHECK_READY_PASSWORD)));
+    }
+    
+    private String getURL() {
+        return getDefaultDatabaseName().isPresent()
+                ? DataSourceEnvironment.getURL(databaseType, "localhost", getFirstMappedPort(), getDefaultDatabaseName().get())
+                : DataSourceEnvironment.getURL(databaseType, "localhost", getFirstMappedPort());
     }
     
     protected final void setCommands(final String command) {
-        if (Strings.isNullOrEmpty(command)) {
-            return;
+        if (!Strings.isNullOrEmpty(command)) {
+            setCommand(command);
         }
-        setCommand(command);
     }
     
     protected final void addEnvs(final Map<String, String> envs) {
@@ -165,12 +165,12 @@ public abstract class DockerStorageContainer extends DockerITContainer implement
     
     @Override
     public Map<String, String> getLinkReplacements() {
-        Map<String, String> replacements = new HashMap<>();
+        Map<String, String> result = new HashMap<>();
         for (String each : getNetworkAliases()) {
             for (Integer exposedPort : getExposedPorts()) {
-                replacements.put(each + ":" + exposedPort, getHost() + ":" + getMappedPort(exposedPort));
+                result.put(each + ":" + exposedPort, getHost() + ":" + getMappedPort(exposedPort));
             }
         }
-        return replacements;
+        return result;
     }
 }
