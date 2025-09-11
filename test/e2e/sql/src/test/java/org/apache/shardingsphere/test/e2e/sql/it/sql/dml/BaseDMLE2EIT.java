@@ -73,7 +73,6 @@ import java.util.stream.Collectors;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class BaseDMLE2EIT implements SQLE2EIT {
     
@@ -235,13 +234,21 @@ public abstract class BaseDMLE2EIT implements SQLE2EIT {
     private String generateFetchActualDataSQL(final Map<String, DataSource> actualDataSourceMap, final DataNode dataNode, final DatabaseType databaseType) throws SQLException {
         String tableName = dataNode.getTableName();
         Optional<String> primaryKeyColumnName = DialectDatabaseAssertionMetaDataFactory.getPrimaryKeyColumnName(databaseType, actualDataSourceMap.get(dataNode.getDataSourceName()), tableName);
-        return primaryKeyColumnName.map(optional -> String.format("SELECT * FROM %s ORDER BY %s ASC", tableName, optional)).orElseGet(() -> String.format("SELECT * FROM %s", tableName));
+        if (primaryKeyColumnName.isPresent()) {
+            return String.format("SELECT * FROM %s ORDER BY %s ASC", tableName, primaryKeyColumnName.get());
+        }
+        // Ensure deterministic order for databases without primary key metadata (e.g., Hive)
+        if ("Hive".equalsIgnoreCase(databaseType.getType())) {
+            return String.format("SELECT * FROM %s ORDER BY 1 ASC", tableName);
+        }
+        return String.format("SELECT * FROM %s", tableName);
     }
     
     private void assertMetaData(final ResultSetMetaData actual, final Collection<DataSetColumn> expected) throws SQLException {
         assertThat(actual.getColumnCount(), is(expected.size()));
         int index = 1;
         for (DataSetColumn each : expected) {
+            //            assertThat(actual.getColumnLabel(index++).toUpperCase(), is(each.getName().toUpperCase()));
             String actualLabel = actual.getColumnLabel(index++);
             int lastDotIndex = actualLabel != null ? actualLabel.lastIndexOf('.') : -1;
             String normalizedLabel = lastDotIndex >= 0 ? actualLabel.substring(lastDotIndex + 1) : actualLabel;

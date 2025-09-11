@@ -16,8 +16,8 @@
 --
 
 -- Hive specific settings
---SET hive.exec.dynamic.partition=true;
---SET hive.exec.dynamic.partition.mode=nonstrict;
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
 
 DROP DATABASE IF EXISTS encrypt;
 CREATE DATABASE IF NOT EXISTS encrypt;

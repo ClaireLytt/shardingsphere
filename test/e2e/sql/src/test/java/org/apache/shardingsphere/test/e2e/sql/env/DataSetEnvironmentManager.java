@@ -44,6 +44,7 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -58,18 +59,18 @@ import java.util.concurrent.Future;
  * Data set environment manager.
  */
 public final class DataSetEnvironmentManager {
-    
+
     // TODO ExecutorEngine.execute and callback
     private static final ExecutorServiceManager EXECUTOR_SERVICE_MANAGER = ExecutorEngine.createExecutorEngineWithSize(Runtime.getRuntime().availableProcessors() * 2 - 1).getExecutorServiceManager();
-    
+
     private static final String DATA_COLUMN_DELIMITER = ", ";
-    
+
     private final DataSet dataSet;
-    
+
     private final Map<String, DataSource> dataSourceMap;
-    
+
     private final DatabaseType databaseType;
-    
+
     public DataSetEnvironmentManager(final String dataSetFile, final Map<String, DataSource> dataSourceMap, final DatabaseType databaseType) throws IOException, JAXBException {
         try (FileReader reader = new FileReader(dataSetFile)) {
             dataSet = (DataSet) JAXBContext.newInstance(DataSet.class).createUnmarshaller().unmarshal(reader);
@@ -77,7 +78,7 @@ public final class DataSetEnvironmentManager {
         this.dataSourceMap = dataSourceMap;
         this.databaseType = databaseType;
     }
-    
+
     /**
      * Fill data.
      */
@@ -108,7 +109,7 @@ public final class DataSetEnvironmentManager {
             future.get();
         }
     }
-    
+
     private Map<DataNode, List<DataSetRow>> getDataSetRowMap() {
         Map<DataNode, List<DataSetRow>> result = new LinkedHashMap<>(dataSet.getRows().size(), 1F);
         for (DataSetRow each : dataSet.getRows()) {
@@ -124,7 +125,7 @@ public final class DataSetEnvironmentManager {
         }
         return result;
     }
-    
+
     private String generateInsertSQL(final String tableName, final Collection<DataSetColumn> columnMetaData, final DatabaseType databaseType) {
         List<String> columnNames = new LinkedList<>();
         List<String> placeholders = new LinkedList<>();
@@ -134,19 +135,19 @@ public final class DataSetEnvironmentManager {
         }
         return String.format("INSERT INTO %s (%s) VALUES (%s)", tableName, String.join(",", columnNames), String.join(",", placeholders));
     }
-    
+
     private String generateProperPlaceholderExpression(final DatabaseType databaseType, final DataSetColumn dataSetColumn) {
         String type = dataSetColumn.getType();
         return (type.startsWith("enum#") || type.startsWith("cast#")) && (databaseType instanceof PostgreSQLDatabaseType || databaseType instanceof OpenGaussDatabaseType)
                 ? generateTypeCastPlaceholder(type)
                 : "?";
     }
-    
+
     private String generateTypeCastPlaceholder(final String type) {
         String[] split = type.split("#");
         return split.length == 2 ? String.format("CAST( ? AS %s )", split[1]) : "?";
     }
-    
+
     /**
      * Clean data.
      */
@@ -161,7 +162,7 @@ public final class DataSetEnvironmentManager {
             future.get();
         }
     }
-    
+
     private Map<String, Collection<String>> getDataNodeMap() {
         Map<String, Collection<String>> result = new LinkedHashMap<>();
         for (DataSetMetaData each : dataSet.getMetaDataList()) {
@@ -174,7 +175,7 @@ public final class DataSetEnvironmentManager {
         }
         return result;
     }
-    
+
     private Map<String, Collection<String>> getDataNodeMap(final DataSetMetaData dataSetMetaData) {
         Map<String, Collection<String>> result = new LinkedHashMap<>();
         for (String each : InlineExpressionParserFactory.newInstance(dataSetMetaData.getDataNodes()).splitAndEvaluate()) {
@@ -186,18 +187,18 @@ public final class DataSetEnvironmentManager {
         }
         return result;
     }
-    
+
     @RequiredArgsConstructor
     private static class InsertTask implements Callable<Void> {
-        
+
         private final DataSource dataSource;
-        
+
         private final String insertSQL;
-        
+
         private final Collection<SQLValueGroup> sqlValueGroups;
-        
+
         private final DatabaseType databaseType;
-        
+
         @Override
         public Void call() throws SQLException {
             try (
@@ -219,7 +220,7 @@ public final class DataSetEnvironmentManager {
             }
             return null;
         }
-        
+
         private void setParameters(final PreparedStatement preparedStatement, final SQLValueGroup sqlValueGroup) throws SQLException {
             for (SQLValue each : sqlValueGroup.getValues()) {
                 Object value = each.getValue();
@@ -236,19 +237,19 @@ public final class DataSetEnvironmentManager {
             }
         }
     }
-    
+
     @RequiredArgsConstructor
     private static class DeleteTask implements Callable<Void> {
-        
+
         private final DataSource dataSource;
-        
+
         private final Collection<String> tableNames;
-        
+
         @Override
         public Void call() throws SQLException {
             try (Connection connection = dataSource.getConnection()) {
+                DatabaseType databaseType = getDatabaseType(connection);
                 for (String each : tableNames) {
-                    DatabaseType databaseType = DatabaseTypeFactory.get(connection.getMetaData().getURL());
                     String quotedTableName = getQuotedTableName(each, databaseType);
                     try (PreparedStatement preparedStatement = connection.prepareStatement(String.format("TRUNCATE TABLE %s", quotedTableName))) {
                         preparedStatement.execute();
@@ -257,7 +258,20 @@ public final class DataSetEnvironmentManager {
             }
             return null;
         }
-        
+
+        private DatabaseType getDatabaseType(final Connection connection) throws SQLException {
+            try {
+                String url = connection.getMetaData().getURL();
+                return DatabaseTypeFactory.get(url);
+            } catch (final SQLFeatureNotSupportedException ex) {
+                String driverName = connection.getMetaData().getDriverName();
+                if (driverName != null && driverName.toLowerCase().contains("hive")) {
+                    return DatabaseTypeFactory.get("jdbc:hive2://localhost:10000/default");
+                }
+                throw ex;
+            }
+        }
+
         private String getQuotedTableName(final String tableName, final DatabaseType databaseType) {
             DatabaseTypeRegistry databaseTypeRegistry = new DatabaseTypeRegistry(databaseType);
             return databaseTypeRegistry.getDialectDatabaseMetaData().getQuoteCharacter().wrap(databaseTypeRegistry.formatIdentifierPattern(tableName));

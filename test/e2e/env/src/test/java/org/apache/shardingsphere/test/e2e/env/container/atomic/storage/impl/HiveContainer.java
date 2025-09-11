@@ -101,6 +101,7 @@ public final class HiveContainer extends DockerStorageContainer {
         super.postStart();
         log.info("Hive container postStart completed successfully");
     }
+
     private void createDatabasesFromConfiguration() throws InterruptedException, IOException {
         Collection<String> actualDatabaseNames = getDatabaseNames();
         Collection<String> expectedDatabaseNames = getExpectedDatabaseNames();
@@ -126,5 +127,11 @@ public final class HiveContainer extends DockerStorageContainer {
                 "if [ -f /docker-entrypoint-initdb.d/01-actual-init.sql ]; then beeline -u \"jdbc:hive2://localhost:10000/default\" -f /docker-entrypoint-initdb.d/01-actual-init.sql; fi");
         execInContainer("bash", "-c",
                 "if [ -f /docker-entrypoint-initdb.d/01-expected-init.sql ]; then beeline -u \"jdbc:hive2://localhost:10000/default\" -f /docker-entrypoint-initdb.d/01-expected-init.sql; fi");
+        execInContainer("bash", "-c",
+                "if [ -f /docker-entrypoint-initdb.d/50-scenario-actual-init.sql ]; then beeline -u \"jdbc:hive2://localhost:10000/default\" -f "
+                        + "/docker-entrypoint-initdb.d/50-scenario-actual-init.sql; fi");
+        execInContainer("bash", "-c",
+                "if [ -f /docker-entrypoint-initdb.d/60-scenario-expected-init.sql ]; then beeline -u \"jdbc:hive2://localhost:10000/default\" -f "
+                        + "/docker-entrypoint-initdb.d/60-scenario-expected-init.sql; fi");
     }
 }

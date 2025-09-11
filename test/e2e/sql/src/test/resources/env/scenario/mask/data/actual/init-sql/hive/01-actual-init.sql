@@ -15,7 +15,20 @@
 -- limitations under the License.
 --
 
-DROP DATABASE IF EXISTS mask;
-CREATE DATABASE mask;
+SET hive.exec.dynamic.partition=true;
+SET hive.exec.dynamic.partition.mode=nonstrict;
 
-CREATE TABLE mask.t_user (user_id INT, user_name VARCHAR(50), password VARCHAR(50), email VARCHAR(50), telephone CHAR(11), creation_date DATE);
+DROP DATABASE IF EXISTS mask;
+CREATE DATABASE IF NOT EXISTS mask;
+USE mask;
+
+CREATE TABLE IF NOT EXISTS t_user (
+    user_id INT,
+    user_name STRING,
+    password STRING,
+    email STRING,
+    telephone STRING,
+    creation_date DATE
+)
+STORED AS ORC
+TBLPROPERTIES ('transactional'='true');
