@@ -14,7 +14,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
--- Hive specific settings
+
 SET hive.exec.dynamic.partition=true;
 SET hive.exec.dynamic.partition.mode=nonstrict;
 
@@ -22,7 +22,6 @@ DROP DATABASE IF EXISTS expected_dataset;
 CREATE DATABASE IF NOT EXISTS expected_dataset;
 USE expected_dataset;
 
--- Create tables without PRIMARY KEY constraints and using STRING instead of VARCHAR/CHAR
 CREATE TABLE expected_dataset.t_order (order_id INT, user_id INT, status STRING, merchant_id INT, remark STRING, creation_date DATE)
 STORED AS ORC
 TBLPROPERTIES ('transactional'='true');

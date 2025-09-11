@@ -108,7 +108,6 @@ public final class HiveContainer extends DockerStorageContainer {
         Collection<String> allDatabaseNames = new HashSet<>();
         allDatabaseNames.addAll(actualDatabaseNames);
         allDatabaseNames.addAll(expectedDatabaseNames);
-        
         if (allDatabaseNames.isEmpty()) {
             log.warn("No databases configured for Hive container");
             return;

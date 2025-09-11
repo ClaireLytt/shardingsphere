@@ -31,6 +31,3 @@ CREATE TABLE IF NOT EXISTS t_user (
 )
 STORED AS ORC
 TBLPROPERTIES ('transactional'='true');
-
-
-

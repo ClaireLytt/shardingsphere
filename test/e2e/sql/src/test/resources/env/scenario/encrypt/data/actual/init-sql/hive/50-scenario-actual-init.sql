@@ -15,7 +15,6 @@
 -- limitations under the License.
 --
 
--- Hive specific settings
 SET hive.exec.dynamic.partition=true;
 SET hive.exec.dynamic.partition.mode=nonstrict;
 
