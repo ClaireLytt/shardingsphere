@@ -39,7 +39,7 @@ import org.apache.shardingsphere.test.e2e.env.container.atomic.enums.AdapterType
 import org.apache.shardingsphere.test.e2e.env.container.atomic.governance.GovernanceContainer;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.governance.GovernanceContainerFactory;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.StorageContainerConfiguration;
-import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.impl.MySQLContainer;
+import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.impl.MySQLContainer;
 import org.awaitility.Awaitility;
 import org.testcontainers.containers.output.OutputFrame;
 
@@ -132,13 +132,12 @@ public final class AgentE2ETestEnvironment {
     }
     
     private static StorageContainerConfiguration getStorageContainerConfiguration() {
-        Map<String, String> containerEnvironments = new HashMap<>(3, 1F);
-        containerEnvironments.put("LANG", "C.UTF-8");
-        containerEnvironments.put("MYSQL_RANDOM_ROOT_PASSWORD", "yes");
-        Map<String, String> mountedResources = new HashMap<>();
-        mountedResources.put("/env/mysql/init.sql", "/docker-entrypoint-initdb.d/init.sql");
-        return new StorageContainerConfiguration("--sql_mode= --default-authentication-plugin=mysql_native_password", containerEnvironments,
-                mountedResources, Collections.emptyMap(), Collections.emptyMap());
+        Map<String, String> environments = new HashMap<>(2, 1F);
+        environments.put("LANG", "C.UTF-8");
+        environments.put("MYSQL_RANDOM_ROOT_PASSWORD", "yes");
+        Map<String, String> mountedResources = Collections.singletonMap("/env/mysql/init.sql", "/docker-entrypoint-initdb.d/init.sql");
+        return new StorageContainerConfiguration(
+                "--sql_mode= --default-authentication-plugin=mysql_native_password", environments, mountedResources, Collections.emptyMap(), Collections.emptyMap());
     }
     
     private AdaptorContainerConfiguration getAdaptorContainerConfiguration() {

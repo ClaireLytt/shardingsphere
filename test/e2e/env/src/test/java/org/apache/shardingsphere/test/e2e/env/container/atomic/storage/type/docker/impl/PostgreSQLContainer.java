@@ -15,45 +15,39 @@
  * limitations under the License.
  */
 
-package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.impl;
+package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.impl;
 
 import com.google.common.base.Strings;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
-import org.apache.shardingsphere.test.e2e.env.container.atomic.constants.StorageContainerConstants;
-import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.DockerStorageContainer;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.StorageContainerConfiguration;
-import org.apache.shardingsphere.test.e2e.env.runtime.DataSourceEnvironment;
+import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.DockerStorageContainer;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * OpenGauss container.
+ * PostgreSQL container.
  */
-public final class OpenGaussContainer extends DockerStorageContainer {
+public final class PostgreSQLContainer extends DockerStorageContainer {
     
-    public static final int OPENGAUSS_EXPOSED_PORT = 5432;
+    public static final int EXPOSED_PORT = 5432;
     
     private final StorageContainerConfiguration storageContainerConfig;
     
-    public OpenGaussContainer(final String containerImage, final StorageContainerConfiguration storageContainerConfig) {
-        super(TypedSPILoader.getService(DatabaseType.class, "openGauss"), Strings.isNullOrEmpty(containerImage) ? "opengauss/opengauss:3.1.0" : containerImage);
+    public PostgreSQLContainer(final String containerImage, final StorageContainerConfiguration storageContainerConfig) {
+        super(TypedSPILoader.getService(DatabaseType.class, "PostgreSQL"), Strings.isNullOrEmpty(containerImage) ? "postgres:12-alpine" : containerImage);
         this.storageContainerConfig = storageContainerConfig;
     }
     
     @Override
     protected void configure() {
-        setCommands(storageContainerConfig.getContainerCommand());
-        addEnvs(storageContainerConfig.getContainerEnvironments());
+        setCommands(storageContainerConfig.getCommand());
+        addEnvs(storageContainerConfig.getEnvironments());
         mapResources(storageContainerConfig.getMountedResources());
-        withPrivilegedMode(true);
         super.configure();
-        withStartupTimeout(Duration.of(120L, ChronoUnit.SECONDS));
     }
     
     @Override
@@ -68,21 +62,16 @@ public final class OpenGaussContainer extends DockerStorageContainer {
     
     @Override
     public int getExposedPort() {
-        return OPENGAUSS_EXPOSED_PORT;
+        return EXPOSED_PORT;
     }
     
     @Override
     public int getMappedPort() {
-        return getMappedPort(OPENGAUSS_EXPOSED_PORT);
+        return getMappedPort(EXPOSED_PORT);
     }
     
     @Override
     protected Optional<String> getDefaultDatabaseName() {
-        return Optional.of(StorageContainerConstants.USERNAME);
-    }
-    
-    @Override
-    public String getJdbcUrl(final String dataSourceName) {
-        return DataSourceEnvironment.getURL(getDatabaseType(), getHost(), getMappedPort(), Strings.isNullOrEmpty(dataSourceName) ? StorageContainerConstants.USERNAME : dataSourceName);
+        return Optional.of("postgres");
     }
 }

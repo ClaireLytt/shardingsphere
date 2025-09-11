@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.impl;
+package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.impl;
 
 import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
-import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.DockerStorageContainer;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.StorageContainerConfiguration;
+import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.DockerStorageContainer;
 import org.apache.shardingsphere.test.e2e.env.container.wait.JdbcConnectionWaitStrategy;
 import org.apache.shardingsphere.test.e2e.env.runtime.DataSourceEnvironment;
 
@@ -53,8 +53,8 @@ public final class HiveContainer extends DockerStorageContainer {
     
     @Override
     protected void configure() {
-        setCommands(storageContainerConfig.getContainerCommand());
-        addEnvs(storageContainerConfig.getContainerEnvironments());
+        setCommands(storageContainerConfig.getCommand());
+        addEnvs(storageContainerConfig.getEnvironments());
         mapResources(storageContainerConfig.getMountedResources());
         withExposedPorts(getExposedPort());
         super.configure();

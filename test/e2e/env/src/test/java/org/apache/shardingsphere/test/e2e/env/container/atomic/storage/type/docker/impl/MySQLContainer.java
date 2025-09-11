@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.impl;
+package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.impl;
 
 import com.google.common.base.Strings;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
-import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.DockerStorageContainer;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.StorageContainerConfiguration;
+import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.DockerStorageContainer;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  */
 public final class MySQLContainer extends DockerStorageContainer {
     
-    public static final int MYSQL_EXPOSED_PORT = 3306;
+    public static final int EXPOSED_PORT = 3306;
     
     private final StorageContainerConfiguration storageContainerConfig;
     
@@ -46,8 +46,8 @@ public final class MySQLContainer extends DockerStorageContainer {
     
     @Override
     protected void configure() {
-        setCommands(storageContainerConfig.getContainerCommand());
-        addEnvs(storageContainerConfig.getContainerEnvironments());
+        setCommands(storageContainerConfig.getCommand());
+        addEnvs(storageContainerConfig.getEnvironments());
         mapResources(storageContainerConfig.getMountedResources());
         super.configure();
         withStartupTimeout(Duration.of(120L, ChronoUnit.SECONDS));
@@ -65,12 +65,12 @@ public final class MySQLContainer extends DockerStorageContainer {
     
     @Override
     public int getExposedPort() {
-        return MYSQL_EXPOSED_PORT;
+        return EXPOSED_PORT;
     }
     
     @Override
     public int getMappedPort() {
-        return getMappedPort(MYSQL_EXPOSED_PORT);
+        return getMappedPort(EXPOSED_PORT);
     }
     
     @Override
