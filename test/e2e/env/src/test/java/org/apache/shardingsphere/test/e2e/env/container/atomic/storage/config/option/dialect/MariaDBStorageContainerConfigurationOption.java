@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Storage container configuration option for MariaDB.
@@ -37,7 +38,7 @@ public final class MariaDBStorageContainerConfigurationOption implements Storage
     }
     
     @Override
-    public Map<String, String> getContainerEnvironments() {
+    public Map<String, String> getEnvironments() {
         Map<String, String> result = new HashMap<>(2, 1F);
         result.put("LANG", "C.UTF-8");
         result.put("MYSQL_RANDOM_ROOT_PASSWORD", "yes");
@@ -50,17 +51,27 @@ public final class MariaDBStorageContainerConfigurationOption implements Storage
     }
     
     @Override
-    public Collection<String> getAdditionalMountedSQLEnvResources(final int majorVersion) {
+    public Collection<String> getAdditionalEnvMountedSQLResources(final int majorVersion) {
         return Collections.emptyList();
-    }
-    
-    @Override
-    public boolean isEmbeddedStorageContainer() {
-        return false;
     }
     
     @Override
     public List<Integer> getSupportedMajorVersions() {
         return Collections.emptyList();
+    }
+    
+    @Override
+    public boolean withPrivilegedMode() {
+        return false;
+    }
+    
+    @Override
+    public Optional<String> getDefaultDatabaseName(final int majorVersion) {
+        return Optional.empty();
+    }
+    
+    @Override
+    public long getStartupTimeoutSeconds() {
+        return 120L;
     }
 }

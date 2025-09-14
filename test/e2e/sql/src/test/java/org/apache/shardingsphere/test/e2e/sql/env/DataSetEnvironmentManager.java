@@ -22,7 +22,6 @@ import lombok.SneakyThrows;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseTypeFactory;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseTypeRegistry;
-import org.apache.shardingsphere.database.connector.hive.type.HiveDatabaseType;
 import org.apache.shardingsphere.database.connector.opengauss.type.OpenGaussDatabaseType;
 import org.apache.shardingsphere.database.connector.postgresql.type.PostgreSQLDatabaseType;
 import org.apache.shardingsphere.infra.datanode.DataNode;
@@ -269,7 +268,7 @@ public final class DataSetEnvironmentManager {
             } catch (final SQLFeatureNotSupportedException ex) {
                 String driverName = connection.getMetaData().getDriverName();
                 if (null != driverName && driverName.toLowerCase().contains("hive")) {
-                    return new HiveDatabaseType();
+                    return DatabaseTypeFactory.get("jdbc:hive2://localhost:10000/default");
                 }
                 throw ex;
             }

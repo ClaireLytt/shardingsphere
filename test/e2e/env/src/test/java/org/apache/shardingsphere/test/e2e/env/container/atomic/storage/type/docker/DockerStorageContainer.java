@@ -23,77 +23,98 @@ import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.DockerITContainer;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.constants.StorageContainerConstants;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.StorageContainer;
+import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.StorageContainerConfiguration;
+import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.mount.MountConfigurationResourceGenerator;
+import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.mount.MountSQLResourceGenerator;
+import org.apache.shardingsphere.test.e2e.env.container.atomic.util.DockerImageVersion;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.util.StorageContainerUtils;
 import org.apache.shardingsphere.test.e2e.env.container.wait.JdbcConnectionWaitStrategy;
 import org.apache.shardingsphere.test.e2e.env.runtime.DataSourceEnvironment;
-import org.testcontainers.containers.BindMode;
 
 import javax.sql.DataSource;
 import java.sql.DriverManager;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
  * Docker storage container.
  */
-@Getter
 public abstract class DockerStorageContainer extends DockerITContainer implements StorageContainer {
-    
-    private static final String CHECK_READY_USER = "ready_user";
-    
-    private static final String CHECK_READY_PASSWORD = "Ready@123";
     
     private final DatabaseType databaseType;
     
+    private final StorageContainerConfiguration storageContainerConfig;
+    
+    private final int majorVersion;
+    
+    @Getter
     private final Map<String, DataSource> actualDataSourceMap = new LinkedHashMap<>();
     
+    @Getter
     private final Map<String, DataSource> expectedDataSourceMap = new LinkedHashMap<>();
     
-    protected DockerStorageContainer(final DatabaseType databaseType, final String containerImage) {
+    protected DockerStorageContainer(final DatabaseType databaseType, final String containerImage, final StorageContainerConfiguration storageContainerConfig) {
         super(databaseType.getType().toLowerCase(), containerImage);
         this.databaseType = databaseType;
+        this.storageContainerConfig = storageContainerConfig;
+        majorVersion = new DockerImageVersion(containerImage).getMajorVersion();
     }
     
     @Override
-    protected void configure() {
+    protected final void configure() {
+        setCommands();
+        addEnvironments();
+        mapResources(new MountConfigurationResourceGenerator(storageContainerConfig.getConfigurationOption(), databaseType).generate(majorVersion, storageContainerConfig.getScenario()));
+        mapResources(new MountSQLResourceGenerator(storageContainerConfig.getConfigurationOption(), databaseType).generate(majorVersion, storageContainerConfig.getScenario()));
+        setPrivilegedMode();
         withExposedPorts(getExposedPort());
-        setWaitStrategy(new JdbcConnectionWaitStrategy(() -> DriverManager.getConnection(getURL(), CHECK_READY_USER, CHECK_READY_PASSWORD)));
+        withStartupTimeout(Duration.of(storageContainerConfig.getConfigurationOption().getStartupTimeoutSeconds(), ChronoUnit.SECONDS));
+        setWaitStrategy(new JdbcConnectionWaitStrategy(() -> DriverManager.getConnection(getURL(), StorageContainerConstants.CHECK_READY_USER, StorageContainerConstants.CHECK_READY_PASSWORD)));
     }
     
-    private String getURL() {
-        return getDefaultDatabaseName().isPresent()
-                ? DataSourceEnvironment.getURL(databaseType, "localhost", getFirstMappedPort(), getDefaultDatabaseName().get())
-                : DataSourceEnvironment.getURL(databaseType, "localhost", getFirstMappedPort());
-    }
-    
-    protected final void setCommands(final String command) {
+    private void setCommands() {
+        String command = storageContainerConfig.getConfigurationOption().getCommand();
         if (!Strings.isNullOrEmpty(command)) {
             setCommand(command);
         }
     }
     
-    protected final void addEnvs(final Map<String, String> envs) {
-        envs.forEach(this::addEnv);
+    private void addEnvironments() {
+        storageContainerConfig.getConfigurationOption().getEnvironments().forEach(this::addEnv);
     }
     
-    protected final void mapResources(final Map<String, String> resources) {
-        resources.forEach((key, value) -> withClasspathResourceMapping(key, value, BindMode.READ_ONLY));
+    private void setPrivilegedMode() {
+        if (storageContainerConfig.getConfigurationOption().withPrivilegedMode()) {
+            withPrivilegedMode(true);
+        }
+    }
+    
+    private String getURL() {
+        return storageContainerConfig.getConfigurationOption().getDefaultDatabaseName(majorVersion)
+                .map(optional -> DataSourceEnvironment.getURL(databaseType, "localhost", getFirstMappedPort(), optional))
+                .orElseGet(() -> DataSourceEnvironment.getURL(databaseType, "localhost", getFirstMappedPort()));
     }
     
     @Override
     protected void postStart() {
-        actualDataSourceMap.putAll(createAccessDataSource(getDatabaseNames()));
-        expectedDataSourceMap.putAll(createAccessDataSource(getExpectedDatabaseNames()));
+        actualDataSourceMap.putAll(createAccessDataSources(getDataSourceNames(storageContainerConfig.getActualDatabaseTypes())));
+        expectedDataSourceMap.putAll(createAccessDataSources(getDataSourceNames(storageContainerConfig.getExpectedDatabaseTypes())));
     }
     
-    protected abstract Collection<String> getDatabaseNames();
+    private Collection<String> getDataSourceNames(final Map<String, DatabaseType> dataSourceNameAndTypeMap) {
+        return dataSourceNameAndTypeMap.entrySet().stream().filter(entry -> entry.getValue() == databaseType).map(Entry::getKey).collect(Collectors.toList());
+    }
     
-    protected abstract Collection<String> getExpectedDatabaseNames();
+    private Map<String, DataSource> createAccessDataSources(final Collection<String> dataSourceNames) {
+        return dataSourceNames.stream().distinct().collect(Collectors.toMap(Function.identity(), this::createAccessDataSource));
+    }
     
     /**
      * Create access data source.
@@ -101,18 +122,8 @@ public abstract class DockerStorageContainer extends DockerITContainer implement
      * @param dataSourceName data source name
      * @return access data source
      */
-    public DataSource createAccessDataSource(final String dataSourceName) {
-        return StorageContainerUtils.generateDataSource(getJdbcUrl(dataSourceName), getUsername(), getPassword(), 20);
-    }
-    
-    /**
-     * Create access data source map.
-     *
-     * @param dataSourceNames data source name collection
-     * @return access data source map
-     */
-    public Map<String, DataSource> createAccessDataSource(final Collection<String> dataSourceNames) {
-        return dataSourceNames.stream().distinct().collect(Collectors.toMap(Function.identity(), this::createAccessDataSource));
+    public final DataSource createAccessDataSource(final String dataSourceName) {
+        return StorageContainerUtils.generateDataSource(getJdbcUrl(dataSourceName), StorageContainerConstants.OPERATION_USER, StorageContainerConstants.OPERATION_PASSWORD, 20);
     }
     
     /**
@@ -121,28 +132,9 @@ public abstract class DockerStorageContainer extends DockerITContainer implement
      * @param dataSourceName datasource name
      * @return JDBC URL
      */
-    public String getJdbcUrl(final String dataSourceName) {
-        return DataSourceEnvironment.getURL(databaseType, getHost(), getMappedPort(), dataSourceName);
-    }
-    
-    protected abstract Optional<String> getDefaultDatabaseName();
-    
-    /**
-     * Get username.
-     *
-     * @return username
-     */
-    public final String getUsername() {
-        return StorageContainerConstants.USERNAME;
-    }
-    
-    /**
-     * Get unified database access password.
-     *
-     * @return unified database access password
-     */
-    public final String getPassword() {
-        return StorageContainerConstants.PASSWORD;
+    public final String getJdbcUrl(final String dataSourceName) {
+        return DataSourceEnvironment.getURL(databaseType, getHost(), getMappedPort(),
+                Strings.isNullOrEmpty(dataSourceName) ? storageContainerConfig.getConfigurationOption().getDefaultDatabaseName(majorVersion).orElse("") : dataSourceName);
     }
     
     /**
@@ -165,7 +157,7 @@ public abstract class DockerStorageContainer extends DockerITContainer implement
     }
     
     @Override
-    public Map<String, String> getLinkReplacements() {
+    public final Map<String, String> getLinkReplacements() {
         Map<String, String> result = new HashMap<>();
         for (String each : getNetworkAliases()) {
             for (Integer exposedPort : getExposedPorts()) {

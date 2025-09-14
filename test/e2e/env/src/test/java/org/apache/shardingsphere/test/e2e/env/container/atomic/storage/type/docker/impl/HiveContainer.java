@@ -23,18 +23,10 @@ import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.StorageContainerConfiguration;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.DockerStorageContainer;
-import org.apache.shardingsphere.test.e2e.env.container.wait.JdbcConnectionWaitStrategy;
-import org.apache.shardingsphere.test.e2e.env.runtime.DataSourceEnvironment;
 
 import java.io.IOException;
-import java.sql.DriverManager;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Hive container.
@@ -44,33 +36,8 @@ public final class HiveContainer extends DockerStorageContainer {
     
     public static final int EXPOSED_PORT = 10000;
     
-    private final StorageContainerConfiguration storageContainerConfig;
-    
     public HiveContainer(final String containerImage, final StorageContainerConfiguration storageContainerConfig) {
-        super(TypedSPILoader.getService(DatabaseType.class, "Hive"), Strings.isNullOrEmpty(containerImage) ? "apache/hive:4.0.1" : containerImage);
-        this.storageContainerConfig = storageContainerConfig;
-    }
-    
-    @Override
-    protected void configure() {
-        setCommands(storageContainerConfig.getCommand());
-        addEnvs(storageContainerConfig.getEnvironments());
-        mapResources(storageContainerConfig.getMountedResources());
-        withExposedPorts(getExposedPort());
-        super.configure();
-        withStartupTimeout(Duration.of(180L, ChronoUnit.SECONDS));
-        setWaitStrategy(new JdbcConnectionWaitStrategy(
-                () -> DriverManager.getConnection(DataSourceEnvironment.getURL(getDatabaseType(), "localhost", getFirstMappedPort()), getUsername(), getPassword())));
-    }
-    
-    @Override
-    protected Collection<String> getDatabaseNames() {
-        return storageContainerConfig.getDatabaseTypes().entrySet().stream().filter(entry -> entry.getValue() == getDatabaseType()).map(Entry::getKey).collect(Collectors.toList());
-    }
-    
-    @Override
-    protected Collection<String> getExpectedDatabaseNames() {
-        return storageContainerConfig.getExpectedDatabaseTypes().entrySet().stream().filter(entry -> entry.getValue() == getDatabaseType()).map(Entry::getKey).collect(Collectors.toList());
+        super(TypedSPILoader.getService(DatabaseType.class, "Hive"), Strings.isNullOrEmpty(containerImage) ? "apache/hive:4.0.1" : containerImage, storageContainerConfig);
     }
     
     @Override
@@ -84,27 +51,22 @@ public final class HiveContainer extends DockerStorageContainer {
     }
     
     @Override
-    protected Optional<String> getDefaultDatabaseName() {
-        return Optional.empty();
-    }
-    
-    @Override
     protected void postStart() {
+        super.postStart();
         try {
-            createDatabasesFromConfiguration();
+            createDatabasesFromDataSourceMaps();
             log.info("Databases created successfully in postStart()");
             executeMountedSQLScripts();
             log.info("Mounted SQL scripts executed successfully");
         } catch (final InterruptedException | IOException ex) {
             log.error("Failed to create databases in postStart()", ex);
         }
-        super.postStart();
         log.info("Hive container postStart completed successfully");
     }
     
-    private void createDatabasesFromConfiguration() throws InterruptedException, IOException {
-        Collection<String> actualDatabaseNames = getDatabaseNames();
-        Collection<String> expectedDatabaseNames = getExpectedDatabaseNames();
+    private void createDatabasesFromDataSourceMaps() throws InterruptedException, IOException {
+        Collection<String> actualDatabaseNames = getActualDataSourceMap().keySet();
+        Collection<String> expectedDatabaseNames = getExpectedDataSourceMap().keySet();
         Collection<String> allDatabaseNames = new HashSet<>();
         allDatabaseNames.addAll(actualDatabaseNames);
         allDatabaseNames.addAll(expectedDatabaseNames);

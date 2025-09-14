@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Storage container configuration option for  PostgreSQL.
@@ -37,10 +38,10 @@ public final class PostgreSQLStorageContainerConfigurationOption implements Stor
     }
     
     @Override
-    public Map<String, String> getContainerEnvironments() {
+    public Map<String, String> getEnvironments() {
         Map<String, String> result = new HashMap<>(2, 1F);
-        result.put("POSTGRES_HOST", StorageContainerConstants.USERNAME);
-        result.put("POSTGRES_PASSWORD", StorageContainerConstants.PASSWORD);
+        result.put("POSTGRES_HOST", StorageContainerConstants.OPERATION_USER);
+        result.put("POSTGRES_PASSWORD", StorageContainerConstants.OPERATION_PASSWORD);
         return result;
     }
     
@@ -50,17 +51,27 @@ public final class PostgreSQLStorageContainerConfigurationOption implements Stor
     }
     
     @Override
-    public Collection<String> getAdditionalMountedSQLEnvResources(final int majorVersion) {
+    public Collection<String> getAdditionalEnvMountedSQLResources(final int majorVersion) {
         return Collections.emptyList();
-    }
-    
-    @Override
-    public boolean isEmbeddedStorageContainer() {
-        return false;
     }
     
     @Override
     public List<Integer> getSupportedMajorVersions() {
         return Collections.emptyList();
+    }
+    
+    @Override
+    public boolean withPrivilegedMode() {
+        return false;
+    }
+    
+    @Override
+    public Optional<String> getDefaultDatabaseName(final int majorVersion) {
+        return Optional.of("postgres");
+    }
+    
+    @Override
+    public long getStartupTimeoutSeconds() {
+        return 120L;
     }
 }

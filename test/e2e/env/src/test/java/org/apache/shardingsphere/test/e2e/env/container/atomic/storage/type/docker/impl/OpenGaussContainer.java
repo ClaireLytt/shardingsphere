@@ -20,17 +20,8 @@ package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.doc
 import com.google.common.base.Strings;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
-import org.apache.shardingsphere.test.e2e.env.container.atomic.constants.StorageContainerConstants;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.StorageContainerConfiguration;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.DockerStorageContainer;
-import org.apache.shardingsphere.test.e2e.env.runtime.DataSourceEnvironment;
-
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * OpenGauss container.
@@ -39,31 +30,8 @@ public final class OpenGaussContainer extends DockerStorageContainer {
     
     public static final int EXPOSED_PORT = 5432;
     
-    private final StorageContainerConfiguration storageContainerConfig;
-    
     public OpenGaussContainer(final String containerImage, final StorageContainerConfiguration storageContainerConfig) {
-        super(TypedSPILoader.getService(DatabaseType.class, "openGauss"), Strings.isNullOrEmpty(containerImage) ? "opengauss/opengauss:3.1.0" : containerImage);
-        this.storageContainerConfig = storageContainerConfig;
-    }
-    
-    @Override
-    protected void configure() {
-        setCommands(storageContainerConfig.getCommand());
-        addEnvs(storageContainerConfig.getEnvironments());
-        mapResources(storageContainerConfig.getMountedResources());
-        withPrivilegedMode(true);
-        super.configure();
-        withStartupTimeout(Duration.of(120L, ChronoUnit.SECONDS));
-    }
-    
-    @Override
-    protected Collection<String> getDatabaseNames() {
-        return storageContainerConfig.getDatabaseTypes().entrySet().stream().filter(entry -> entry.getValue() == getDatabaseType()).map(Entry::getKey).collect(Collectors.toList());
-    }
-    
-    @Override
-    protected Collection<String> getExpectedDatabaseNames() {
-        return storageContainerConfig.getExpectedDatabaseTypes().entrySet().stream().filter(entry -> entry.getValue() == getDatabaseType()).map(Entry::getKey).collect(Collectors.toList());
+        super(TypedSPILoader.getService(DatabaseType.class, "openGauss"), Strings.isNullOrEmpty(containerImage) ? "opengauss/opengauss:3.1.0" : containerImage, storageContainerConfig);
     }
     
     @Override
@@ -74,15 +42,5 @@ public final class OpenGaussContainer extends DockerStorageContainer {
     @Override
     public int getMappedPort() {
         return getMappedPort(EXPOSED_PORT);
-    }
-    
-    @Override
-    protected Optional<String> getDefaultDatabaseName() {
-        return Optional.of(StorageContainerConstants.USERNAME);
-    }
-    
-    @Override
-    public String getJdbcUrl(final String dataSourceName) {
-        return DataSourceEnvironment.getURL(getDatabaseType(), getHost(), getMappedPort(), Strings.isNullOrEmpty(dataSourceName) ? StorageContainerConstants.USERNAME : dataSourceName);
     }
 }

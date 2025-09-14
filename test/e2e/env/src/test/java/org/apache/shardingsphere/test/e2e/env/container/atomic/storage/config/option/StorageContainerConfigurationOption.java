@@ -20,6 +20,7 @@ package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.o
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Storage container configuration option.
@@ -27,9 +28,9 @@ import java.util.Map;
 public interface StorageContainerConfigurationOption {
     
     /**
-     * Get command.
+     * Get container command.
      *
-     * @return command
+     * @return container command
      */
     String getCommand();
     
@@ -38,7 +39,7 @@ public interface StorageContainerConfigurationOption {
      *
      * @return container environments
      */
-    Map<String, String> getContainerEnvironments();
+    Map<String, String> getEnvironments();
     
     /**
      * Get mounted configuration resources.
@@ -48,19 +49,12 @@ public interface StorageContainerConfigurationOption {
     Collection<String> getMountedConfigurationResources();
     
     /**
-     * Get additional mounted env SQL resources.
+     * Get additional env mounted SQL resources.
      *
      * @param majorVersion major version
-     * @return additional mounted env SQL resources
+     * @return additional env mounted SQL resources
      */
-    Collection<String> getAdditionalMountedSQLEnvResources(int majorVersion);
-    
-    /**
-     * Whether embedded storage container.
-     *
-     * @return is embedded storage container or not
-     */
-    boolean isEmbeddedStorageContainer();
+    Collection<String> getAdditionalEnvMountedSQLResources(int majorVersion);
     
     /**
      * Get supported major versions.
@@ -68,4 +62,26 @@ public interface StorageContainerConfigurationOption {
      * @return supported major versions
      */
     List<Integer> getSupportedMajorVersions();
+    
+    /**
+     * Whether with privileged mode.
+     *
+     * @return is with privileged mode or not
+     */
+    boolean withPrivilegedMode();
+    
+    /**
+     * Get the default database name.
+     *
+     * @param majorVersion major version
+     * @return default database name
+     */
+    Optional<String> getDefaultDatabaseName(int majorVersion);
+    
+    /**
+     * Get container startup timeout seconds.
+     *
+     * @return container startup timeout seconds
+     */
+    long getStartupTimeoutSeconds();
 }

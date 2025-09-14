@@ -23,13 +23,6 @@ import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.StorageContainerConfiguration;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.DockerStorageContainer;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 /**
  * MySQL container.
  */
@@ -37,30 +30,8 @@ public final class MySQLContainer extends DockerStorageContainer {
     
     public static final int EXPOSED_PORT = 3306;
     
-    private final StorageContainerConfiguration storageContainerConfig;
-    
     public MySQLContainer(final String containerImage, final StorageContainerConfiguration storageContainerConfig) {
-        super(TypedSPILoader.getService(DatabaseType.class, "MySQL"), Strings.isNullOrEmpty(containerImage) ? "mysql:8.0.40" : containerImage);
-        this.storageContainerConfig = storageContainerConfig;
-    }
-    
-    @Override
-    protected void configure() {
-        setCommands(storageContainerConfig.getCommand());
-        addEnvs(storageContainerConfig.getEnvironments());
-        mapResources(storageContainerConfig.getMountedResources());
-        super.configure();
-        withStartupTimeout(Duration.of(120L, ChronoUnit.SECONDS));
-    }
-    
-    @Override
-    protected Collection<String> getDatabaseNames() {
-        return storageContainerConfig.getDatabaseTypes().entrySet().stream().filter(entry -> entry.getValue() == getDatabaseType()).map(Entry::getKey).collect(Collectors.toList());
-    }
-    
-    @Override
-    protected Collection<String> getExpectedDatabaseNames() {
-        return storageContainerConfig.getExpectedDatabaseTypes().entrySet().stream().filter(entry -> entry.getValue() == getDatabaseType()).map(Entry::getKey).collect(Collectors.toList());
+        super(TypedSPILoader.getService(DatabaseType.class, "MySQL"), Strings.isNullOrEmpty(containerImage) ? "mysql:8.0.40" : containerImage, storageContainerConfig);
     }
     
     @Override
@@ -71,10 +42,5 @@ public final class MySQLContainer extends DockerStorageContainer {
     @Override
     public int getMappedPort() {
         return getMappedPort(EXPOSED_PORT);
-    }
-    
-    @Override
-    protected Optional<String> getDefaultDatabaseName() {
-        return Optional.empty();
     }
 }

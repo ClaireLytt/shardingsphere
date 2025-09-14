@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Storage container configuration option for MySQL.
@@ -39,7 +40,7 @@ public final class MySQLStorageContainerConfigurationOption implements StorageCo
     }
     
     @Override
-    public Map<String, String> getContainerEnvironments() {
+    public Map<String, String> getEnvironments() {
         Map<String, String> result = new HashMap<>(2, 1F);
         result.put("LANG", "C.UTF-8");
         result.put("MYSQL_RANDOM_ROOT_PASSWORD", "yes");
@@ -52,7 +53,7 @@ public final class MySQLStorageContainerConfigurationOption implements StorageCo
     }
     
     @Override
-    public Collection<String> getAdditionalMountedSQLEnvResources(final int majorVersion) {
+    public Collection<String> getAdditionalEnvMountedSQLResources(final int majorVersion) {
         Collection<String> result = new LinkedList<>();
         if (majorVersion > 5) {
             result.add("21-env-grant-xa-privilege.sql");
@@ -61,12 +62,22 @@ public final class MySQLStorageContainerConfigurationOption implements StorageCo
     }
     
     @Override
-    public boolean isEmbeddedStorageContainer() {
+    public List<Integer> getSupportedMajorVersions() {
+        return Arrays.asList(8, 5);
+    }
+    
+    @Override
+    public boolean withPrivilegedMode() {
         return false;
     }
     
     @Override
-    public List<Integer> getSupportedMajorVersions() {
-        return Arrays.asList(5, 8);
+    public Optional<String> getDefaultDatabaseName(final int majorVersion) {
+        return Optional.empty();
+    }
+    
+    @Override
+    public long getStartupTimeoutSeconds() {
+        return 120L;
     }
 }
