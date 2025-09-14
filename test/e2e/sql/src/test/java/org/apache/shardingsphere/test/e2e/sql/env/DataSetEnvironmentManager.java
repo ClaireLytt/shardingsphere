@@ -24,6 +24,7 @@ import org.apache.shardingsphere.database.connector.core.type.DatabaseTypeFactor
 import org.apache.shardingsphere.database.connector.core.type.DatabaseTypeRegistry;
 import org.apache.shardingsphere.database.connector.opengauss.type.OpenGaussDatabaseType;
 import org.apache.shardingsphere.database.connector.postgresql.type.PostgreSQLDatabaseType;
+import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.infra.datanode.DataNode;
 import org.apache.shardingsphere.infra.executor.kernel.ExecutorEngine;
 import org.apache.shardingsphere.infra.executor.kernel.thread.ExecutorServiceManager;
@@ -268,7 +269,7 @@ public final class DataSetEnvironmentManager {
             } catch (final SQLFeatureNotSupportedException ex) {
                 String driverName = connection.getMetaData().getDriverName();
                 if (null != driverName && driverName.toLowerCase().contains("hive")) {
-                    return DatabaseTypeFactory.get("jdbc:hive2://localhost:10000/default");
+                    return TypedSPILoader.getService(DatabaseType.class, "Hive");
                 }
                 throw ex;
             }
