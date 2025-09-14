@@ -22,6 +22,7 @@ import lombok.SneakyThrows;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseTypeFactory;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseTypeRegistry;
+import org.apache.shardingsphere.database.connector.hive.type.HiveDatabaseType;
 import org.apache.shardingsphere.database.connector.opengauss.type.OpenGaussDatabaseType;
 import org.apache.shardingsphere.database.connector.postgresql.type.PostgreSQLDatabaseType;
 import org.apache.shardingsphere.infra.datanode.DataNode;
@@ -97,9 +98,6 @@ public final class DataSetEnvironmentManager {
             String insertSQL;
             try (Connection connection = dataSourceMap.get(dataNode.getDataSourceName()).getConnection()) {
                 String insertTableName = dataNode.getTableName();
-                if ("Hive".equalsIgnoreCase(databaseType.getType())) {
-                    insertTableName = dataNode.getDataSourceName() + "." + dataNode.getTableName();
-                }
                 insertSQL = generateInsertSQL(insertTableName, dataSetMetaData.getColumns(), databaseType);
             }
             fillDataTasks.add(new InsertTask(dataSourceMap.get(dataNode.getDataSourceName()), insertSQL, sqlValueGroups, databaseType));
@@ -204,18 +202,23 @@ public final class DataSetEnvironmentManager {
             try (
                     Connection connection = dataSource.getConnection();
                     PreparedStatement preparedStatement = connection.prepareStatement(insertSQL)) {
-                boolean isHive = "Hive".equalsIgnoreCase(databaseType.getType());
-                if (isHive) {
-                    for (SQLValueGroup each : sqlValueGroups) {
-                        setParameters(preparedStatement, each);
-                        preparedStatement.executeUpdate();
-                    }
-                } else {
+                boolean supportsBatchUpdates;
+                try {
+                    supportsBatchUpdates = connection.getMetaData().supportsBatchUpdates();
+                } catch (final SQLFeatureNotSupportedException ignored) {
+                    supportsBatchUpdates = false;
+                }
+                if (supportsBatchUpdates) {
                     for (SQLValueGroup each : sqlValueGroups) {
                         setParameters(preparedStatement, each);
                         preparedStatement.addBatch();
                     }
                     preparedStatement.executeBatch();
+                } else {
+                    for (SQLValueGroup each : sqlValueGroups) {
+                        setParameters(preparedStatement, each);
+                        preparedStatement.executeUpdate();
+                    }
                 }
             }
             return null;
@@ -227,7 +230,7 @@ public final class DataSetEnvironmentManager {
                 int index = each.getIndex();
                 if ("Hive".equalsIgnoreCase(databaseType.getType())) {
                     if (value instanceof Date) {
-                        preparedStatement.setString(index, value.toString());
+                        preparedStatement.setDate(index, (java.sql.Date) value);
                     } else {
                         preparedStatement.setObject(index, value);
                     }
@@ -265,8 +268,8 @@ public final class DataSetEnvironmentManager {
                 return DatabaseTypeFactory.get(url);
             } catch (final SQLFeatureNotSupportedException ex) {
                 String driverName = connection.getMetaData().getDriverName();
-                if (driverName != null && driverName.toLowerCase().contains("hive")) {
-                    return DatabaseTypeFactory.get("jdbc:hive2://localhost:10000/default");
+                if (null != driverName && driverName.toLowerCase().contains("hive")) {
+                    return new HiveDatabaseType();
                 }
                 throw ex;
             }
