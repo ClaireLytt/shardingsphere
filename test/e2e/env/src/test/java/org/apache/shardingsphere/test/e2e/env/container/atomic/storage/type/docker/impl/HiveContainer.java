@@ -75,10 +75,10 @@ public final class HiveContainer extends DockerStorageContainer {
             return;
         }
         StringBuilder createDatabaseSQL = new StringBuilder();
-        for (String databaseName : allDatabaseNames) {
-            createDatabaseSQL.append("CREATE DATABASE IF NOT EXISTS ").append(databaseName).append("; ");
+        for (String each : allDatabaseNames) {
+            createDatabaseSQL.append("CREATE DATABASE IF NOT EXISTS ").append(each).append("; ");
         }
-        String command = String.format("beeline -u \"jdbc:hive2://localhost:10000/default\" -e \"%s\"", createDatabaseSQL.toString());
+        String command = String.format("beeline -u \"jdbc:hive2://localhost:10000/default\" -e \"%s\"", createDatabaseSQL);
         execInContainer("bash", "-c", command);
         log.info("Created databases: {}", allDatabaseNames);
     }
