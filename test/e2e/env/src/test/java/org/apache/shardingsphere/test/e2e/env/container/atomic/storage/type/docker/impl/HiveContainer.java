@@ -25,8 +25,6 @@ import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.St
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.DockerStorageContainer;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * Hive container.
