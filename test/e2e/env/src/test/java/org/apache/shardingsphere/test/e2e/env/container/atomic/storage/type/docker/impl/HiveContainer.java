@@ -55,7 +55,7 @@ public final class HiveContainer extends DockerStorageContainer {
             executeMountedSQLScripts();
             log.info("Mounted SQL scripts executed successfully");
         } catch (final InterruptedException | IOException ex) {
-            log.error("Failed to create databases in postStart()", ex);
+            log.error("Failed to execute mounted SQL scripts", ex);
         }
         log.info("Hive container postStart completed successfully");
     }
