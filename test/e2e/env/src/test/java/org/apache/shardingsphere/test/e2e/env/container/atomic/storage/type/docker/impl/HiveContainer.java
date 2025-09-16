@@ -54,33 +54,12 @@ public final class HiveContainer extends DockerStorageContainer {
     protected void postStart() {
         super.postStart();
         try {
-            createDatabasesFromDataSourceMaps();
-            log.info("Databases created successfully in postStart()");
             executeMountedSQLScripts();
             log.info("Mounted SQL scripts executed successfully");
         } catch (final InterruptedException | IOException ex) {
             log.error("Failed to create databases in postStart()", ex);
         }
         log.info("Hive container postStart completed successfully");
-    }
-    
-    private void createDatabasesFromDataSourceMaps() throws InterruptedException, IOException {
-        Collection<String> actualDatabaseNames = getActualDataSourceMap().keySet();
-        Collection<String> expectedDatabaseNames = getExpectedDataSourceMap().keySet();
-        Collection<String> allDatabaseNames = new HashSet<>();
-        allDatabaseNames.addAll(actualDatabaseNames);
-        allDatabaseNames.addAll(expectedDatabaseNames);
-        if (allDatabaseNames.isEmpty()) {
-            log.warn("No databases configured for Hive container");
-            return;
-        }
-        StringBuilder createDatabaseSQL = new StringBuilder();
-        for (String each : allDatabaseNames) {
-            createDatabaseSQL.append("CREATE DATABASE IF NOT EXISTS ").append(each).append("; ");
-        }
-        String command = String.format("beeline -u \"jdbc:hive2://localhost:10000/default\" -e \"%s\"", createDatabaseSQL);
-        execInContainer("bash", "-c", command);
-        log.info("Created databases: {}", allDatabaseNames);
     }
     
     private void executeMountedSQLScripts() throws InterruptedException, IOException {
