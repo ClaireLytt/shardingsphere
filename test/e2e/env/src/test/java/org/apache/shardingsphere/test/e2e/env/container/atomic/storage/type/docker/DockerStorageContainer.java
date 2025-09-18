@@ -36,6 +36,8 @@ import org.apache.shardingsphere.test.e2e.env.runtime.scenario.database.Database
 import org.apache.shardingsphere.test.e2e.env.runtime.scenario.path.ScenarioDataPath.Type;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import java.sql.DriverManager;
 import java.time.Duration;
 import java.util.Collection;
@@ -50,6 +52,7 @@ import java.util.stream.Collectors;
 /**
  * Docker storage container.
  */
+@Slf4j
 public class DockerStorageContainer extends DockerITContainer implements StorageContainer {
     
     private final StorageContainerConfigurationOption option;
@@ -114,8 +117,24 @@ public class DockerStorageContainer extends DockerITContainer implements Storage
     
     @Override
     protected void postStart() {
+        if ("Hive".equalsIgnoreCase(option.getDatabaseType())) {
+            executeHiveMountedSQLScripts();
+        }
         actualDataSourceMap.putAll(createAccessDataSources(getDataSourceNames(getDataSourceNameAndTypeMap(Type.ACTUAL))));
         expectedDataSourceMap.putAll(createAccessDataSources(getDataSourceNames(getDataSourceNameAndTypeMap(Type.EXPECTED))));
+    }
+    
+    private void executeHiveMountedSQLScripts() {
+        try {
+            execInContainer("bash", "-c",
+                    "if [ -f /docker-entrypoint-initdb.d/50-scenario-actual-init.sql ]; then beeline -u \"jdbc:hive2://localhost:10000/default\" -f "
+                            + "/docker-entrypoint-initdb.d/50-scenario-actual-init.sql; fi");
+            execInContainer("bash", "-c",
+                    "if [ -f /docker-entrypoint-initdb.d/60-scenario-expected-init.sql ]; then beeline -u \"jdbc:hive2://localhost:10000/default\" -f "
+                            + "/docker-entrypoint-initdb.d/60-scenario-expected-init.sql; fi");
+        } catch (final InterruptedException | IOException ex) {
+            log.warn("Hive init scripts execution failed.", ex);
+        }
     }
     
     private Map<String, DatabaseType> getDataSourceNameAndTypeMap(final Type type) {
