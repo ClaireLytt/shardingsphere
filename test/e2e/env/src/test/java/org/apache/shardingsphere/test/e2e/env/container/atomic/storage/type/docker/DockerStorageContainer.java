@@ -20,6 +20,7 @@ package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.doc
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.database.connector.core.spi.DatabaseTypedSPILoader;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.DockerITContainer;
@@ -37,7 +38,6 @@ import org.apache.shardingsphere.test.e2e.env.runtime.scenario.path.ScenarioData
 
 import javax.sql.DataSource;
 import java.io.IOException;
-import lombok.extern.slf4j.Slf4j;
 import java.sql.DriverManager;
 import java.time.Duration;
 import java.util.Collection;
