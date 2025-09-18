@@ -17,11 +17,8 @@
 
 package org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.impl;
 
-import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
-import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
-import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.config.StorageContainerConfiguration;
+import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.option.StorageContainerConfigurationOption;
 import org.apache.shardingsphere.test.e2e.env.container.atomic.storage.type.docker.DockerStorageContainer;
 
 import java.io.IOException;
@@ -32,20 +29,8 @@ import java.io.IOException;
 @Slf4j
 public final class HiveContainer extends DockerStorageContainer {
     
-    public static final int EXPOSED_PORT = 10000;
-    
-    public HiveContainer(final String containerImage, final StorageContainerConfiguration storageContainerConfig) {
-        super(TypedSPILoader.getService(DatabaseType.class, "Hive"), Strings.isNullOrEmpty(containerImage) ? "apache/hive:4.0.1" : containerImage, storageContainerConfig);
-    }
-    
-    @Override
-    public int getExposedPort() {
-        return EXPOSED_PORT;
-    }
-    
-    @Override
-    public int getMappedPort() {
-        return getMappedPort(EXPOSED_PORT);
+    public HiveContainer(final String containerImage, final StorageContainerConfigurationOption option, final String scenario) {
+        super(containerImage, option, scenario);
     }
     
     @Override

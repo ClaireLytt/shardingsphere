@@ -68,8 +68,6 @@ public final class ShardingSphereJdbcEmbeddedContainer implements EmbeddedITCont
         HikariDataSource result = new HikariDataSource();
         result.setDriverClassName("org.apache.shardingsphere.driver.ShardingSphereDriver");
         result.setJdbcUrl("jdbc:shardingsphere:absolutepath:" + processFile(configPath, storageContainer.getLinkReplacements()));
-        result.setUsername("root");
-        result.setPassword("Root@123");
         result.setMaximumPoolSize(2);
         result.setTransactionIsolation("TRANSACTION_READ_COMMITTED");
         result.setLeakDetectionThreshold(10000L);
