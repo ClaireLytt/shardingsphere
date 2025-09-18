@@ -70,7 +70,7 @@
         <assertion expected-data-file="delete_with_multiple.xml" />
     </test-case>
 
-    <test-case sql="DELETE FROM t_user WHERE user_id = ?" db-types="Hive" scenario-types="encrypt">
+    <test-case sql="DELETE FROM t_user WHERE user_id = ?" db-types="Hive" scenario-types="encrypt" skip-batch="true">
         <assertion parameters="10:int" expected-data-file="delete_user_table.xml" />
     </test-case>
 </e2e-test-cases>
