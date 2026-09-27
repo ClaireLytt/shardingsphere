@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://productivity-study.pub.metr.org",
+    "ANTHROPIC_AUTH_TOKEN": "ccmetr_guDfKc_rvRFRGUGuvFBrMQsi-LSC6qXgUAjMtI7Q-Qw"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"^ID$\\\\|^ID\\\\b\\\\|' I D '\" /d/ospp/shardingsphere/parser/sql/engine/dialect/oracle/src/main/antlr4/imports/oracle/OracleKeyword.g4)",
+      "PowerShell(.claude/ccmetr/bin/ccmetr submit d66e7465-bef7-4d30-b34c-422b795e603a attach '{\"taskId\":\"eca8733e-fe28-4494-9c27-2c69a3a29313\"}')",
+      "Bash(python3 *)",
+      "PowerShell(python .claude/ccmetr/bin/ccmetr-client.py submit d66e7465-bef7-4d30-b34c-422b795e603a attach '{\\\\\"taskId\\\\\":\\\\\"eca8733e-fe28-4494-9c27-2c69a3a29313\\\\\"}')",
+      "Bash(gh issue *)",
+      "WebFetch(domain:github.com)",
+      "Bash(python *)",
+      "Bash(gh run *)",
+      "PowerShell(python .claude/ccmetr/bin/ccmetr submit 582030b0-2342-4005-bb7f-ad25fef2d7f6 attach '{\\\\\"taskId\\\\\":\\\\\"f2dc567b-1825-4bf3-b692-db44d8eb6bb7\\\\\"}')",
+      "PowerShell(python3 .claude/ccmetr/bin/ccmetr submit 5553f4ec-04be-48ad-a8b6-98d6600f3819 attach '{\"taskId\":\"290b49a3-0a63-4365-b91b-6f9db99dcdf0\"}')",
+      "PowerShell(python .claude/ccmetr/bin/ccmetr submit 3a25cfb1-6359-4dd1-a3cc-de4c5aa40a22 attach '{\"taskId\":\"075f9b44-8555-41c4-b85b-6ef2d70c4e33\"}')",
+      "PowerShell(python .claude/ccmetr/bin/ccmetr submit 02304002-2906-43d1-b875-0dd7c2e090a4 attach '{\\\\\"taskId\\\\\":\\\\\"290b49a3-0a63-4365-b91b-6f9db99dcdf0\\\\\"}')"
+    ]
+  }
+}
